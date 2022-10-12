@@ -5,6 +5,11 @@ import pl.kurs.pathfinder.exceptions.IllegalPlaceException;
 import pl.kurs.pathfinder.exceptions.RoadNotFoundException;
 import pl.kurs.pathfinder.model.Point;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -21,7 +26,7 @@ public class PathFinderService {
             {0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0},
     };
 
-    //    public static List<Point> getPath(Point start, Point end, int m, int n) throws IllegalAccessException {
+    //    public List<Point> getPath(Point start, Point end, int m, int n) throws IllegalAccessException {
     public List<Point> getPath(Point start, Point end) {
 
 //        int[][] stage = generateMap(m,n);
@@ -99,9 +104,42 @@ public class PathFinderService {
         return theBestRoad;
     }
 
-    private int[][] addPotentialRoadToStage(Point start, Point end, int m, int n, int[][] stage) {
+    public byte[] getPathWithImage(Point start, Point end) throws IOException {
+        BufferedImage image = new BufferedImage(17 * 30, 4 * 30, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g;
+        g = image.createGraphics();
+
+        List<Point> theBestRoad = getPath(start, end);
+
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 17; j++) {
+                if (STAGE[i][j] == 0) {
+                    g.setColor(Color.white);
+                    g.fillRect(j * 30, i * 30, 30, 30);
+                } else if (STAGE[i][j] == 1) {
+                    g.setColor(Color.black);
+                    g.fillRect(j * 30, i * 30, 30, 30);
+                }
+                if (theBestRoad.contains(new Point(i, j))) {
+                    g.setColor(Color.green);
+                    g.fillRect(j * 30, i * 30, 30, 30);
+                }
+            }
+        }
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(image, "jpg", baos);
+        return baos.toByteArray();
+    }
+
+    private int[][] addPotentialRoadToStage(Point start, Point end, int m, int n, int[][] oryginalStage) {
         List<Point> visited = new LinkedList<>();
         Queue<Point> pointQueue = new LinkedList<>(List.of(start));
+
+        int[][] stage = new int[oryginalStage.length][];
+        for (int i = 0; i < oryginalStage.length; i++)
+            stage[i] = oryginalStage[i].clone();
+
         stage[start.getX()][start.getY()] = 2;
 
         while (!pointQueue.isEmpty()) {
